@@ -1,3 +1,6 @@
+# incident-response-playbooks
+
+[![CI](https://img.shields.io/github/actions/workflow/status/vtino17/incident-response-playbooks/ci.yml?style=flat-square&label=CI)](https://github.com/vtino17/incident-response-playbooks/actions)
 # Incident Response Playbooks
 
 Enterprise-grade incident response framework with playbooks, forensics collection scripts, SIEM query libraries, evidence management templates, and communication templates for security operations teams.
@@ -50,3 +53,4 @@ cat queries/splunk/ioc_hunting.spl
 ## License
 
 MIT
+
