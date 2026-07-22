@@ -1,0 +1,46 @@
+<group name="ransomware">
+  <rule id="110001" level="12">
+    <if_sid>510</if_sid>
+    <match>vssadmin delete shadows</match>
+    <description>Volume Shadow Copy deletion detected - potential ransomware activity</description>
+    <group>ransomware,pci_dss_11.4,gdpr_IV_35.7.d,</group>
+  </rule>
+
+  <rule id="110002" level="12">
+    <if_sid>510</if_sid>
+    <match>bcdedit /set {default} recoveryenabled</match>
+    <match>bcdedit /set {default} bootstatuspolicy</match>
+    <description>System recovery configuration modified - potential ransomware</description>
+    <group>ransomware,</group>
+  </rule>
+
+  <rule id="110003" level="10" frequency="50" timeframe="60" ignore="30">
+    <if_sid>550</if_sid>
+    <match>.encrypted</match>
+    <match>.locked</match>
+    <match>.crypted</match>
+    <description>Mass file encryption detected - ransomware outbreak likely</description>
+    <group>ransomware,critical,</group>
+  </rule>
+
+  <rule id="110004" level="12">
+    <if_sid>510</if_sid>
+    <match>wevtutil cl</match>
+    <description>Windows event log cleared - evidence of defense evasion</description>
+    <group>ransomware,defense_evasion,</group>
+  </rule>
+
+  <rule id="110005" level="10">
+    <if_sid>510</if_sid>
+    <match>wmic.exe shadowcopy delete</match>
+    <description>WMIC shadow copy deletion - ransomware preparation</description>
+    <group>ransomware,</group>
+  </rule>
+
+  <rule id="110006" level="15">
+    <if_sid>110001,110002,110003,110005</if_sid>
+    <description>Multiple ransomware indicators detected - confirmed ransomware outbreak</description>
+    <group>ransomware,critical,</group>
+    <options>no_full_log</options>
+  </rule>
+</group>

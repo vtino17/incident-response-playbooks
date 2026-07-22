@@ -1,0 +1,4 @@
+*.encrypted
+*.pcap
+evidence/
+.DS_Store

@@ -1,0 +1,33 @@
+index=* sourcetype=WinEventLog:Security
+| search EventCode=4624 LogonType=3
+| stats count by Account_Name, Source_Network_Address, Workstation_Name
+| where count > 100
+| sort -count
+| table Account_Name, Source_Network_Address, Workstation_Name, count
+
+index=* sourcetype="WinEventLog:Security" EventCode=4688
+| search New_Process_Name=*powershell* OR New_Process_Name=*cmd* OR New_Process_Name=*wmic* OR New_Process_Name=*psexec*
+| stats count by Account_Name, New_Process_Name, Creator_Process_ID, ComputerName
+| where count > 10
+| sort -count
+
+index=* sourcetype="WinEventLog:Security" EventCode=4625
+| search LogonType=3
+| timechart span=1h count by Source_Network_Address useother=f limit=10
+
+index=* sourcetype="WinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=3
+| search DestinationIp=*.*.*.*
+| stats count by SourceIp, DestinationIp, DestinationPort, Image
+| sort -count
+
+index=* sourcetype="WinEventLog:Microsoft-Windows-PowerShell/Operational" EventCode=4104
+| search ScriptBlockText=*
+| eval script_length = len(ScriptBlockText)
+| where script_length > 500
+| table TimeCreated, ComputerName, UserId, ScriptBlockText
+| sort -TimeCreated
+
+index=* sourcetype="WinEventLog:Security" EventCode=4732
+| search Account_Name=Administrators
+| table TimeCreated, Account_Name, SubjectUserName, TargetUserName
+| sort -TimeCreated
