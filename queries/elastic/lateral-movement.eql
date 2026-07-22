@@ -1,0 +1,24 @@
+[sequence by host.name with maxspan=1m
+  [process where event.type == "start" and 
+     process.name in ("rundll32.exe", "regsvr32.exe", "mshta.exe", "powershell.exe") and 
+     process.parent.name == "svchost.exe"]
+  [network where event.type == "connection" and 
+     destination.port == 445 or destination.port == 3389]
+]
+
+[sequence by host.name with maxspan=5m
+  [process where event.type == "start" and 
+     process.name == "cmd.exe" and 
+     process.args : ("*\\\\*", "*net use*", "*\/IT:*")]
+  [process where event.type == "start" and 
+     process.name == "schtasks.exe"]
+]
+
+[sequence by user.name with maxspan=10m
+  [authentication where event.type == "start" and 
+     winlog.event_id == 4624 and 
+     winlog.logon_type == 3]
+  [file where event.type == "creation" and 
+     file.name : "*.exe" and 
+     file.path : "\\\\*\\*"]
+]
