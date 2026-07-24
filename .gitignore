@@ -1,4 +1,1 @@
-*.encrypted
-*.pcap
-evidence/
-.DS_Store
+*.bak\n*.swp
