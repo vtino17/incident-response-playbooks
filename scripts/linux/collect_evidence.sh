@@ -1,11 +1,20 @@
 #!/bin/bash
 set -euo pipefail
+umask 077
 
 OUTPUT_DIR="${1:-./evidence_$(hostname)}"
-mkdir -p "$OUTPUT_DIR"/{network,processes,system,persistence,logs}
 
 log() {
     echo "[+] $*"
+}
+
+prepare_output() {
+    if [[ -L "$OUTPUT_DIR" || ( -e "$OUTPUT_DIR" && ! -d "$OUTPUT_DIR" ) ]]; then
+        echo "Error: evidence destination must be a real directory: $OUTPUT_DIR" >&2
+        return 1
+    fi
+    mkdir -p -- "$OUTPUT_DIR"/{network,processes,system,persistence,logs}
+    chmod 700 "$OUTPUT_DIR" "$OUTPUT_DIR"/{network,processes,system,persistence,logs}
 }
 
 collect_network() {
@@ -73,25 +82,39 @@ collect_logs() {
 
 hash_artifacts() {
     log "Generating file hashes"
-    find "$OUTPUT_DIR" -type f -exec sha256sum {} \; > "$OUTPUT_DIR/hashes.txt"
+    local manifest="$OUTPUT_DIR/hashes.txt"
+    find "$OUTPUT_DIR" -type f ! -path "$manifest" -print0 \
+        | sort -z \
+        | xargs -0 -r sha256sum > "$manifest"
     echo "Hash file: $OUTPUT_DIR/hashes.txt"
 }
 
 create_archive() {
     local archive="${OUTPUT_DIR}.tar.gz"
-    tar -czf "$archive" -C "$(dirname "$OUTPUT_DIR")" "$(basename "$OUTPUT_DIR")"
+    if [[ -e "$archive" || -L "$archive" ]]; then
+        echo "Error: refusing to overwrite existing evidence archive: $archive" >&2
+        return 1
+    fi
+    tar -czf "$archive" -C "$(dirname "$OUTPUT_DIR")" -- "$(basename "$OUTPUT_DIR")"
     log "Evidence archive created: $archive"
     log "SHA256: $(sha256sum "$archive" | cut -d' ' -f1)"
 }
 
-collect_network
-collect_processes
-collect_system
-collect_persistence
-collect_logs
-hash_artifacts
-create_archive
+main() {
+    prepare_output
+    collect_network
+    collect_processes
+    collect_system
+    collect_persistence
+    collect_logs
+    hash_artifacts
+    create_archive
 
-log "Evidence collection completed"
-echo "Evidence directory: $OUTPUT_DIR"
-echo "Evidence archive: ${OUTPUT_DIR}.tar.gz"
+    log "Evidence collection completed"
+    echo "Evidence directory: $OUTPUT_DIR"
+    echo "Evidence archive: ${OUTPUT_DIR}.tar.gz"
+}
+
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    main
+fi
