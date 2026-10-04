@@ -1,1 +1,3 @@
-# Incident Response Playbooks\n\nCollection of IR playbooks and procedures
+# Incident Response Playbooks
+
+Collection of IR playbooks and procedures.
